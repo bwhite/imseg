@@ -1,2 +1,3 @@
 from _imseg_rand_forest import RandomForestClassifier
 import _imseg_rand_forest as rand_forest
+from _imseg_rand_forest_image_features import TextonFeatureFactory, TextonFeature, TextonPredict, IntegralFeatureFactory, IntegralFeature, IntegralPredict

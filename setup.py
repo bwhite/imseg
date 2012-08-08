@@ -33,10 +33,12 @@ except ImportError:
     source_ext = '.c'
     cmdclass = {}
 
-
 ext_modules = [Extension("_imseg_rand_forest", ["imseg/rand_forest/rand_forest" + source_ext,
                                                 'imseg/rand_forest/fast_hist.c'],
-                         extra_compile_args=['-I', np.get_include()])]
+                         extra_compile_args=['-I', np.get_include(), '-O3']),
+               Extension("_imseg_rand_forest_image_features", ['imseg/rand_forest/forest_image_features_aux.c',
+                                                               "imseg/rand_forest/forest_image_features" + source_ext],
+                         extra_compile_args=['-I', np.get_include(), '-O3'])]
 setup(name='imseg',
       cmdclass=cmdclass,
       version='0.0.1',
