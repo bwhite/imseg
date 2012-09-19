@@ -1,9 +1,11 @@
 from _imseg_rand_forest import RandomForestClassifier
 import _imseg_rand_forest as rand_forest
 from _imseg_rand_forest_image_features import TextonFeatureFactory, TextonFeature, TextonPredict, IntegralFeatureFactory, IntegralFeature, IntegralPredict
+from super_pixels import SuperPixels
 
 import numpy as np
 import cv2
+
 
 def convert_labels_to_integrals(label_mask, num_vals):
     """
