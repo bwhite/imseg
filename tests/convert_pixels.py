@@ -12,7 +12,7 @@ for fn in glob.glob('output/*.jpg'):
     out = a(image, 25)
     hulls = label_image_to_contours(out, 1.)
     fp = open('output/%s.js' % os.path.basename(fn), 'w')
-    json.dump({'segments': hulls, 'class_prob': {}}, fp, -1, separators=(',', ':'))
+    json.dump({'segments': hulls, 'class_prob': {}}, fp, separators=(',', ':'))
     #for hull in hulls[1:]:
     #    hull = np.asarray(hull).astype(np.int32).reshape(1, -1, 2)
     #    cv2.drawContours(image, hull, -1, (0, 0, 255))
