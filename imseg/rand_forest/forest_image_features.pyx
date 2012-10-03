@@ -198,13 +198,13 @@ def convert_classifier_integral(image_data):
     preds = np.ascontiguousarray(image_data[0], dtype=np.float64)
     integrals = np.ascontiguousarray(image_data[1], dtype=np.float64)
     height_width = (integrals.shape[0], integrals.shape[1])
-    out_data = np.ascontiguousarray([<int>preds.data, <int>integrals.data], dtype=np.int)
-    #if cython.sizeof(cython.p_void) == 4:
-    #    out_data = np.ascontiguousarray([<np.uint32_t>preds.data, <np.uint32_t>integrals.data], dtype=np.uint32)
-    #elif cython.sizeof(cython.p_void) == 8:
-    #    out_data = np.ascontiguousarray([<np.uint64_t>preds.data, <np.uint64_t>integrals.data], dtype=np.uint64)
-    #else:
-    #    raise ValueError('Unexpected void pointer size! [%d]' % cython.sizeof(cython.p_void))
+    #out_data = np.ascontiguousarray([<int>preds.data, <int>integrals.data], dtype=np.int)
+    if cython.sizeof(cython.p_void) == 4:
+        out_data = np.ascontiguousarray([<np.uint32_t>preds.data, <np.uint32_t>integrals.data], dtype=np.uint32)
+    elif cython.sizeof(cython.p_void) == 8:
+        out_data = np.ascontiguousarray([<np.uint64_t>preds.data, <np.uint64_t>integrals.data], dtype=np.uint64)
+    else:
+        raise ValueError('Unexpected void pointer size! [%d]' % cython.sizeof(cython.p_void))
     return out_data, height_width, (preds, integrals, image_data)
 
 
