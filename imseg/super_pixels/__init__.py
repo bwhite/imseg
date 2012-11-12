@@ -5,7 +5,7 @@ import os
 import tempfile
 import imfeat
 import shutil
-import Image
+from PIL import Image
 import stat
 
 
