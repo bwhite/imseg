@@ -7,6 +7,7 @@ import imfeat
 import shutil
 from PIL import Image
 import stat
+import numpy as np
 
 
 class SuperPixels(object):
