@@ -10,7 +10,7 @@ for fn in glob.glob('output/*.jpg'):
     print(fn)
     image = cv2.imread(fn)
     out = a(image, 25)
-    hulls = label_image_to_contours(out, 1.)
+    hulls = a.label_image_to_contours(out, 1.)
     fp = open('output/%s.js' % os.path.basename(fn), 'w')
     json.dump({'segments': hulls, 'class_prob': {}}, fp, separators=(',', ':'))
     #for hull in hulls[1:]:
