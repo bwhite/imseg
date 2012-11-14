@@ -4,8 +4,6 @@ import numpy as np
 import random
 import vision_data
 import time
-#import finder_dataset
-from finder import sun397_dataset
 import cv2
 import json
 
@@ -115,10 +113,6 @@ def write_texton_hadoop(dataset, classes):
     print('Classes: %r' % classes)
 
 if __name__ == '__main__':
-    import vision_data
-    #dataset = vision_data.MSRC() # msrc_classes
-    #dataset = finder_dataset.Finder()
-    #classes = finder_classes
-    dataset = sun397_dataset.SUN397()
-    classes = sun397_classes
+    dataset = vision_data.MSRC()
+    classes = msrc_classes
     write_texton_hadoop(dataset, classes)
