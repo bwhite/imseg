@@ -15,6 +15,7 @@ def parse():
                         help='Output dir')
     parser.add_argument('json_configs', type=str, nargs='+',
                         help='JSON Configs to load, they are applied in order with the last taking precedence')
+    parser.add_argument('--freeze', action='store_true', help='If set, use hadoopy.launch_frozen instead of hadoopy.launch')
     args = parser.parse_args()
     c = {}
     for json_config_fn in args.json_configs:
@@ -24,27 +25,27 @@ def parse():
         del c['seed']
     except KeyError:
         pass
-    return args.out_dir, c, [int(np.random.randint(0, 2**31 - 1)) for level in range(c['max_levels'] + 1)]
+    launcher = hadoopy.launch_frozen if args.freeze else hadoopy.launch
+    return args.out_dir, c, [int(np.random.randint(0, 2**31 - 1)) for level in range(c['max_levels'] + 1)], launcher
 
 
-def main(out_dir, c, level_seeds):
+def main(out_dir, c, level_seeds, launcher):
     pprint.pprint(c)  # Output config
     start_time = time.time()
     output_path = '%s/%f/' % (c['output_path'], start_time)
     tree_ser = [[]]
     tree_map = {0: tree_ser}
-    frozen_tar_path = None
     try:
         os.makedirs(out_dir)
     except OSError:
         pass
-    with open('%s/tree_ser-%f.js' % (out_dir, start_time), 'w')  as fp:
+    with open('%s/tree_ser-%f.js' % (out_dir, start_time), 'w') as fp:
         json.dump(c, fp)
     for level in range(c['max_levels'] + 1):  # One more level for leaves
         cur_output_path = '%s/%d/' % (output_path, level)
         cmdenvs = ['%s=%s' % (x.upper(), y) for x, y in c.items()]
         cmdenvs += ['SEED=%d' % level_seeds[level],
-                   'LEVEL=%d' % level]
+                    'LEVEL=%d' % level]
         # This task is run with compression and a modified partitioner
         with tempfile.NamedTemporaryFile() as fp:
             pickle.dump(tree_ser, fp, -1)
@@ -52,14 +53,13 @@ def main(out_dir, c, level_seeds):
             cur_cmdenvs = list(cmdenvs)  # Make a copy
             if tree_ser[0]:  # Only use if we have a tree already, if not everything is root=0
                 cur_cmdenvs += ['TREE_SER_FN=%s' % os.path.basename(fp.name)]
-            frozen_tar_path = hadoopy.launch_frozen(c['input_path'], cur_output_path + 'feat', 'tree_level.py', cmdenvs=cur_cmdenvs,
-                                                    num_reducers=min(c['max_reducers'], 2**level),
-                                                    files=[fp.name],
-                                                    jobconfs=['mapred.output.compression.codec=org.apache.hadoop.io.compress.GzipCodec',
-                                                              'mapred.output.compression.type=BLOCK',
-                                                              'mapred.task.timeout=6000000',
-                                                              'mapred.child.java.opts=-Xmx768M'],
-                                                    frozen_tar_path=frozen_tar_path)['frozen_tar_path']
+            launcher(c['input_path'], cur_output_path + 'feat', 'tree_level.py', cmdenvs=cur_cmdenvs,
+                     num_reducers=min(c['max_reducers'], 2**level),
+                     files=[fp.name, 'tree_features.py'],
+                     jobconfs=['mapred.output.compression.codec=org.apache.hadoop.io.compress.GzipCodec',
+                               'mapred.output.compression.type=BLOCK',
+                               'mapred.task.timeout=6000000',
+                               'mapred.child.java.opts=-Xmx768M'])
         # ,'mapred.child.java.opts=-Xmx512M'
         # Collect output and add to tree, for terminated nodes compute final probabilities
         new_children = False
@@ -74,7 +74,7 @@ def main(out_dir, c, level_seeds):
                 tree_map[root] += [feat_ser, left_tree, right_tree, {'info_gain': info_gain}]
         if not new_children:  # We are done
             break
-        with open('%s/tree_ser-%s-%f-%d.pkl' % (out_dir, c['feature_type'], start_time, level), 'w')  as fp:
+        with open('%s/tree_ser-%s-%f-%d.pkl' % (out_dir, c['feature_type'], start_time, level), 'w') as fp:
             pickle.dump([tree_ser], fp, -1)
 
 if __name__ == '__main__':

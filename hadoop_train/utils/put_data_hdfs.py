@@ -57,7 +57,9 @@ def write_texton_hadoop(dataset, classes):
     image_name: A string
     image_label_points: List of (image, [(label, points), ...]) where points is Nx2 (y, x)
     """
-    sample_points = 10000
+    if not isinstance(classes, dict):
+        classes = dict((y, x) for x, y in enumerate(classes))
+    sample_points = 15000
     samples_per_class = {}
 
     def make_data():
@@ -99,7 +101,7 @@ def write_texton_hadoop(dataset, classes):
     for x in make_data():
         print('spatial_queries/input/%s/%f/%d.tb.seq' % (dataset._name, start_time, hdfs_file_cnt))
         hdfs_buf.append(x)
-        if len(hdfs_buf) >= 20:
+        if len(hdfs_buf) >= 100:
             try:
                 hadoopy.writetb('spatial_queries/input/%s/%f/%d.tb.seq' % (dataset._name, start_time, hdfs_file_cnt), hdfs_buf)
             except IOError, e:
@@ -115,4 +117,10 @@ def write_texton_hadoop(dataset, classes):
 if __name__ == '__main__':
     dataset = vision_data.MSRC()
     classes = msrc_classes
+    if 1:
+        from data_sources import data_source_from_uri
+        from sun397_dataset import SUN397
+        uri = 'hbase://localhost:9090/images?image=data:image_320&gt=feat:masks_gt'
+        dataset = SUN397(data_source_from_uri(uri))
+        classes = json.load(open('classes.js'))
     write_texton_hadoop(dataset, classes)
